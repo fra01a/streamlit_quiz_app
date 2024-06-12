@@ -53,16 +53,11 @@ def main():
         question = st.session_state.shuffled_questions[st.session_state.current_question_index]
         st.write(f"Q{st.session_state.current_question_index + 1}: {question['question']}")
 
-        if st.session_state.answers[st.session_state.current_question_index] is not None:
-            selected_answer = st.session_state.answers[st.session_state.current_question_index]
-        else:
-            selected_answer = None
-
         selected_answer = st.radio(
             "Select your answer:",
             options=[(i, answer[3:]) for i, answer in enumerate(question['shuffled_answers'])],
-            index=selected_answer if selected_answer is not None else -1,
-            format_func=lambda x: x[1]
+            format_func=lambda x: x[1],
+            key=f"question_{st.session_state.current_question_index}"
         )
 
         if selected_answer is not None:
@@ -96,3 +91,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
