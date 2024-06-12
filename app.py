@@ -43,22 +43,34 @@ def main():
         st.session_state.score = 0
         st.session_state.current_question_index = 0
         st.session_state.answers = [None] * len(shuffled_questions)
+        st.session_state.show_feedback = False
 
     if st.session_state.current_question_index < len(shuffled_questions):
         question = shuffled_questions[st.session_state.current_question_index]
         st.write(f"Q{st.session_state.current_question_index + 1}: {question['question']}")
 
         selected_answer = st.radio(
-            f"Question {st.session_state.current_question_index + 1}",
+            "Select your answer:",
             options=[(i, answer[3:]) for i, answer in enumerate(question['answers'])],
             format_func=lambda x: x[1]
         )
 
+        if st.session_state.show_feedback:
+            correct_answer_idx = question['correct']
+            correct_answer_text = question['answers'][correct_answer_idx][3:]
+            if selected_answer is not None and selected_answer[0] == correct_answer_idx:
+                st.success("Correct!")
+            else:
+                st.error(f"Incorrect. The correct answer is: {correct_answer_text}")
+
         if st.button("Next"):
-            correct_answer = question['correct']
-            if selected_answer is not None and selected_answer[0] == correct_answer:
-                st.session_state.score += 1
-            st.session_state.current_question_index += 1
+            if not st.session_state.show_feedback:
+                st.session_state.show_feedback = True
+            else:
+                st.session_state.show_feedback = False
+                if selected_answer is not None and selected_answer[0] == question['correct']:
+                    st.session_state.score += 1
+                st.session_state.current_question_index += 1
             st.experimental_rerun()
     else:
         st.write(f"Your final score is {st.session_state.score} out of {len(shuffled_questions)}")
@@ -66,6 +78,7 @@ def main():
             st.session_state.score = 0
             st.session_state.current_question_index = 0
             st.session_state.answers = [None] * len(shuffled_questions)
+            st.session_state.show_feedback = False
             st.experimental_rerun()
 
 if __name__ == "__main__":
