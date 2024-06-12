@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jun 12 09:00:13 2024
-
-@author: Francesco
-"""
 import random
 import streamlit as st
 import docx
@@ -54,13 +48,15 @@ def main():
         question = shuffled_questions[st.session_state.current_question_index]
         st.write(f"Q{st.session_state.current_question_index + 1}: {question['question']}")
 
-        for i, answer in enumerate(question['answers']):
-            if st.radio(f"Question {st.session_state.current_question_index + 1}", [f"{i}. {answer[3:]}"]) == f"{i}. {answer[3:]}":
-                st.session_state.answers[st.session_state.current_question_index] = i
+        selected_answer = st.radio(
+            f"Question {st.session_state.current_question_index + 1}",
+            options=[(i, answer[3:]) for i, answer in enumerate(question['answers'])],
+            format_func=lambda x: x[1]
+        )
 
         if st.button("Next"):
             correct_answer = question['correct']
-            if st.session_state.answers[st.session_state.current_question_index] == correct_answer:
+            if selected_answer is not None and selected_answer[0] == correct_answer:
                 st.session_state.score += 1
             st.session_state.current_question_index += 1
             st.experimental_rerun()
