@@ -26,8 +26,11 @@ def read_questions_from_docx(file_path):
 def shuffle_answers(questions):
     for question in questions:
         correct_answer = question["answers"][0]
-        random.shuffle(question["answers"])
-        question["correct"] = question["answers"].index(correct_answer)
+        shuffled_order = list(range(len(question["answers"])))
+        random.shuffle(shuffled_order)
+        question["shuffled_order"] = shuffled_order
+        question["shuffled_answers"] = [question["answers"][i] for i in shuffled_order]
+        question["correct"] = shuffled_order.index(0)  # Find the new position of the correct answer
     return questions
 
 # Percorso del file con le domande
@@ -44,20 +47,22 @@ def main():
         st.session_state.current_question_index = 0
         st.session_state.answers = [None] * len(shuffled_questions)
         st.session_state.show_feedback = False
+        st.session_state.shuffled_questions = shuffled_questions
 
-    if st.session_state.current_question_index < len(shuffled_questions):
-        question = shuffled_questions[st.session_state.current_question_index]
+    if st.session_state.current_question_index < len(st.session_state.shuffled_questions):
+        question = st.session_state.shuffled_questions[st.session_state.current_question_index]
         st.write(f"Q{st.session_state.current_question_index + 1}: {question['question']}")
 
         selected_answer = st.radio(
             "Select your answer:",
-            options=[(i, answer[3:]) for i, answer in enumerate(question['answers'])],
+            options=[(i, answer[3:]) for i, answer in enumerate(question['shuffled_answers'])],
+            index=st.session_state.answers[st.session_state.current_question_index] if st.session_state.answers[st.session_state.current_question_index] is not None else -1,
             format_func=lambda x: x[1]
         )
 
         if st.session_state.show_feedback:
             correct_answer_idx = question['correct']
-            correct_answer_text = question['answers'][correct_answer_idx][3:]
+            correct_answer_text = question['shuffled_answers'][correct_answer_idx][3:]
             if selected_answer is not None and selected_answer[0] == correct_answer_idx:
                 st.success("Correct!")
             else:
@@ -70,14 +75,15 @@ def main():
                 st.session_state.show_feedback = False
                 if selected_answer is not None and selected_answer[0] == question['correct']:
                     st.session_state.score += 1
+                st.session_state.answers[st.session_state.current_question_index] = selected_answer[0]
                 st.session_state.current_question_index += 1
             st.experimental_rerun()
     else:
-        st.write(f"Your final score is {st.session_state.score} out of {len(shuffled_questions)}")
+        st.write(f"Your final score is {st.session_state.score} out of {len(st.session_state.shuffled_questions)}")
         if st.button("Restart"):
             st.session_state.score = 0
             st.session_state.current_question_index = 0
-            st.session_state.answers = [None] * len(shuffled_questions)
+            st.session_state.answers = [None] * len(st.session_state.shuffled_questions)
             st.session_state.show_feedback = False
             st.experimental_rerun()
 
