@@ -22,7 +22,7 @@ def read_questions_from_docx(file_path):
         questions.append(current_question)
     return questions
 
-# Function to shuffle the answers
+# Function to shuffle the answers and store the shuffled order
 def shuffle_answers(questions):
     for question in questions:
         correct_answer = question["answers"][0]
@@ -53,12 +53,20 @@ def main():
         question = st.session_state.shuffled_questions[st.session_state.current_question_index]
         st.write(f"Q{st.session_state.current_question_index + 1}: {question['question']}")
 
+        if st.session_state.answers[st.session_state.current_question_index] is not None:
+            selected_answer = st.session_state.answers[st.session_state.current_question_index]
+        else:
+            selected_answer = None
+
         selected_answer = st.radio(
             "Select your answer:",
             options=[(i, answer[3:]) for i, answer in enumerate(question['shuffled_answers'])],
-            index=st.session_state.answers[st.session_state.current_question_index] if st.session_state.answers[st.session_state.current_question_index] is not None else -1,
+            index=selected_answer if selected_answer is not None else -1,
             format_func=lambda x: x[1]
         )
+
+        if selected_answer is not None:
+            st.session_state.answers[st.session_state.current_question_index] = selected_answer[0]
 
         if st.session_state.show_feedback:
             correct_answer_idx = question['correct']
@@ -75,7 +83,6 @@ def main():
                 st.session_state.show_feedback = False
                 if selected_answer is not None and selected_answer[0] == question['correct']:
                     st.session_state.score += 1
-                st.session_state.answers[st.session_state.current_question_index] = selected_answer[0]
                 st.session_state.current_question_index += 1
             st.experimental_rerun()
     else:
